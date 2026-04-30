@@ -3,6 +3,7 @@
     "name": "hotel-pms-fullstack-mobile",
     "slug": "hotel-pms-fullstack-mobile",
     "version": "1.0.0",
+    "scheme": "hestia-pms",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
