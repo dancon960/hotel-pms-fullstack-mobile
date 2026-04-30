@@ -1,0 +1,19 @@
+# Reglas del Proyecto: Hotel PMS Mobile
+
+## Stack Tecnológico
+- React Native (Expo) con TypeScript.
+- Navegación: Expo Router.
+- Estado Global: Zustand con persistencia (AsyncStorage).
+- UI: Gluestack UI.
+- Validación: Zod.
+
+## Convenciones de Código
+- Usar siempre TypeScript estricto (evitar 'any').
+- Los componentes deben ser funcionales y usar Hooks.
+- Mantener la nomenclatura del dominio hotelero: Room, Booking, Incident, Housekeeping.
+- Estructura de carpetas: app/, components/, store/, types/, constants/.
+
+## Restricciones
+- No sugerir Context API (usar siempre Zustand).
+- No usar etiquetas HTML (div, span), usar componentes de React Native (View, Text).
+- Separar la lógica de los componentes en custom hooks cuando sea posible.
