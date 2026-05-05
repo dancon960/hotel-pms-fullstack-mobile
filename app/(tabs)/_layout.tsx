@@ -8,7 +8,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Inicio',
-          headerTitle: 'Hestia Native',
+          headerTitle: 'Gestión de Hotel',
           tabBarIcon: ({ color }) => <Home color={color} size={24} />,
         }}
       />
