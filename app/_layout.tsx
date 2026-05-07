@@ -7,6 +7,7 @@ export default function RootLayout() {
     <GluestackUIProvider config={config}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="incidencias/nueva" options={{ presentation: 'modal', title: 'Reportar Incidencia' }} />
       </Stack>
     </GluestackUIProvider>
   );
