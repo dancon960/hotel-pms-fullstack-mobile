@@ -1,39 +1,74 @@
+import React from 'react';
 import { ScrollView } from 'react-native';
-import { Box, VStack, Heading, Text, Pressable } from '@gluestack-ui/themed';
+import { 
+  Box, 
+  VStack, 
+  Text, 
+  Accordion, 
+  AccordionItem, 
+  AccordionHeader, 
+  AccordionTrigger, 
+  AccordionContent,
+  AccordionIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Heading
+} from '@gluestack-ui/themed';
 import { useHotelStore } from '../../store/hotelStore';
+import { RoomCard } from '../../components/items/RoomCard';
+// Añadimos la importación del Modal
+import { RoomDetailModal } from '../../components/modals/RoomDetailModal';
 
 export default function HabitacionesScreen() {
-  const { plantas, cambiarEstado } = useHotelStore();
+  const { plantas } = useHotelStore();
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f1f5f9' }}>
-      <Box p="$4">
-        {plantas.map((p) => (
-          <VStack key={p.piso} mb="$6">
-            <Heading size="md" mb="$3">PLANTA {p.piso}</Heading>
-            
-            {p.habitaciones.map((h) => (
-              <Pressable 
-                key={h.numero} 
-                onPress={() => {
-                  // Ejemplo rápido de acción: rotar estados
-                  const siguiente = h.estado === 'libre' ? 'ocupada' : 'libre';
-                  cambiarEstado(h.numero, siguiente);
-                }}
-              >
-                <Box 
-                  p="$4" bg="$white" mb="$2" borderRadius="$lg" softShadow="1"
-                  borderLeftWidth={10}
-                  borderLeftColor={h.estado === 'libre' ? '$green500' : h.estado === 'ocupada' ? '$blue500' : '$red500'}
-                >
-                  <Text fontWeight="$bold">HAB {h.numero} - {h.tipo}</Text>
-                  <Text size="sm">{h.estado.toUpperCase()} {h.cliente ? `(${h.cliente})` : ''}</Text>
-                </Box>
-              </Pressable>
+    <Box flex={1} bg="$slate50">
+      <ScrollView style={{ flex: 1 }}>
+        <Box p="$4">
+          <Heading size="xl" mb="$4" color="$slate900">Plantas del Hotel</Heading>
+          
+          <Accordion 
+            width="100%" 
+            size="md" 
+            variant="filled" 
+            type="single" 
+            isCollapsible={true}
+          >
+            {plantas.map((planta) => (
+              <AccordionItem value={`planta-${planta.piso}`} key={planta.piso} mb="$2" borderRadius="$lg" bg="$white">
+                <AccordionHeader>
+                  <AccordionTrigger>
+                    {({ isExpanded }: { isExpanded: boolean }) => (
+                      <>
+                        <Text fontWeight="$bold" fontSize="$md" color="$slate800">
+                          PLANTA {planta.piso} 
+                          <Text size="xs" color="$slate500" fontWeight="$normal">  • {planta.habitaciones.length} habs</Text>
+                        </Text>
+                        {isExpanded ? (
+                          <AccordionIcon as={ChevronUpIcon} ml="$3" />
+                        ) : (
+                          <AccordionIcon as={ChevronDownIcon} ml="$3" />
+                        )}
+                      </>
+                    )}
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent bg="$slate50" pb="$4">
+                  <VStack space="xs">
+                    {planta.habitaciones.map((hab) => (
+                      <RoomCard key={hab.numero} habitacion={hab} />
+                    ))}
+                  </VStack>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </VStack>
-        ))}
-      </Box>
-    </ScrollView>
+          </Accordion>
+        </Box>
+      </ScrollView>
+
+      {/* IMPORTANTE: El modal se pone aquí al final para que esté siempre "escuchando" */}
+      <RoomDetailModal />
+    </Box>
   );
 }
