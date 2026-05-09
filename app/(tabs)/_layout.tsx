@@ -5,19 +5,27 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF', // Azul para resaltar la pestaña activa
+        tabBarActiveTintColor: '#007AFF',
         tabBarInactiveTintColor: 'gray',
-        headerStyle: {
-          backgroundColor: '#ffffff',
-        },
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerStyle: { backgroundColor: '#ffffff' },
+        headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
-      {/* 1. RESERVAS (Antiguo index) */}
+      {/* 1. DASHBOARD / GENERAL */}
       <Tabs.Screen
         name="index"
+        options={{
+          title: 'General',
+          headerTitle: 'Gestión General',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart" size={size} color={color} />
+          ),
+        }}
+      />
+
+      {/* 2. RESERVAS */}
+      <Tabs.Screen
+        name="reservas"
         options={{
           title: 'Reservas',
           headerTitle: 'Gestión de Reservas',
@@ -27,7 +35,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 2. HABITACIONES (Con limpieza asimilada) */}
+      {/* 3. HABITACIONES */}
       <Tabs.Screen
         name="habitaciones"
         options={{
@@ -39,7 +47,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 3. INCIDENCIAS (Mantenimiento) */}
+      {/* 4. INCIDENCIAS */}
       <Tabs.Screen
         name="incidencias"
         options={{

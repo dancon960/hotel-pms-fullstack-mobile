@@ -8,7 +8,7 @@ const PRECIOS: Record<string, number> = {
   'IND': 60
 };
 
-// 2. Rack de habitaciones (He corregido los números de la planta 3 para que sean 301, 302...)
+// 2. Rack de habitaciones
 const HOTEL_DATA: Planta[] = [
   {
     piso: 1,
@@ -39,15 +39,18 @@ const HOTEL_DATA: Planta[] = [
   }
 ];
 
-// 3. Interfaz única del Store
+// 3. Interfaz del Store con las nuevas funciones de Reservas
 interface HotelStore {
   plantas: Planta[];
   bookings: Booking[];
   incidents: Incident[];
-  selectedRoom: Habitacion | null; // Habitación que clicamos
+  selectedRoom: Habitacion | null;
   setSelectedRoom: (room: Habitacion | null) => void;
   cambiarEstado: (numero: string, nuevoEstado: Habitacion['estado']) => void;
   addIncident: (incident: Incident) => void;
+  // Nuevas acciones para reservas
+  addBooking: (booking: Booking) => void;
+  updateBooking: (id: string, updated: Partial<Booking>) => void;
 }
 
 export const useHotelStore = create<HotelStore>((set) => ({
@@ -64,7 +67,8 @@ export const useHotelStore = create<HotelStore>((set) => ({
       roomNumber: '102', 
       checkIn: new Date(), 
       checkOut: new Date(),
-      status: 'checked-in' 
+      status: 'checked-in',
+      companions: [] 
     },
     { 
       id: '2', 
@@ -74,13 +78,15 @@ export const useHotelStore = create<HotelStore>((set) => ({
       roomNumber: '204', 
       checkIn: new Date(), 
       checkOut: new Date(),
-      status: 'checked-in' 
+      status: 'checked-in',
+      companions: [] 
     },
   ],
 
-  // Acciones
+  // Acción: Seleccionar habitación para el modal
   setSelectedRoom: (room) => set({ selectedRoom: room }),
 
+  // Acción: Cambiar estado de limpieza/disponibilidad
   cambiarEstado: (numero, nuevoEstado) =>
     set((state) => ({
       plantas: state.plantas.map((p) => ({
@@ -91,6 +97,19 @@ export const useHotelStore = create<HotelStore>((set) => ({
       })),
     })),
 
+  // Acción: Añadir incidencia técnica
   addIncident: (incident) =>
     set((state) => ({ incidents: [...state.incidents, incident] })),
+
+  // Acción: Añadir nueva reserva
+  addBooking: (booking) =>
+    set((state) => ({ bookings: [...state.bookings, booking] })),
+
+  // Acción: Editar reserva existente (nombre, hab, acompañantes, etc.)
+  updateBooking: (id, updated) =>
+    set((state) => ({
+      bookings: state.bookings.map((b) =>
+        b.id === id ? { ...b, ...updated, updatedAt: new Date() } : b
+      ),
+    })),
 }));
