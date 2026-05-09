@@ -1,69 +1,71 @@
 import React from 'react';
 import { ScrollView } from 'react-native';
 import { 
-  Box, 
-  VStack, 
-  HStack, 
-  Text, 
-  Heading, 
-  Badge, 
-  BadgeText,
-  Divider,
-  CalendarDaysIcon,
-  Icon
+  Box, VStack, HStack, Text, Heading, Accordion, AccordionItem, 
+  AccordionHeader, AccordionTrigger, AccordionContent, AccordionIcon,
+  ChevronDownIcon, ChevronUpIcon, Divider, Badge, BadgeText
 } from '@gluestack-ui/themed';
 import { useHotelStore } from '../../store/hotelStore';
 
 export default function ReservasScreen() {
-  const { bookings } = useHotelStore();
+  const { plantas, bookings } = useHotelStore();
 
   return (
-    <Box flex={1} bg="$slate50" p="$4">
-      <Heading size="xl" mb="$4" color="$slate900">Listado de Reservas</Heading>
-      
+    <Box flex={1} bg="$slate50">
       <ScrollView>
-        <VStack space="md">
-          {bookings.map((reserva) => (
-            <Box 
-              key={reserva.id} 
-              p="$4" 
-              bg="$white" 
-              borderRadius="$lg" 
-              softShadow="1"
-            >
-              <HStack justifyContent="space-between" alignItems="flex-start">
-                <VStack space="xs">
-                  <Text size="xs" color="$blue600" fontWeight="$bold" textTransform="uppercase">
-                    Habitación {reserva.roomNumber}
-                  </Text>
-                  <Heading size="md" color="$slate800">{reserva.guestName}</Heading>
-                </VStack>
-                
-                <Badge 
-                  size="md" 
-                  variant="solid" 
-                  borderRadius="$full" 
-                  action={reserva.status === 'checked-in' ? 'success' : 'warning'}
-                >
-                  <BadgeText>{reserva.status}</BadgeText>
-                </Badge>
-              </HStack>
+        <Box p="$4">
+          <Heading size="xl" mb="$4" color="$slate900">Planning de Ocupación</Heading>
+          
+          <Accordion width="100%" type="single" isCollapsible={true}>
+            {plantas.map((planta) => (
+              <AccordionItem value={`p-${planta.piso}`} key={planta.piso} mb="$2" bg="$white" borderRadius="$lg">
+                <AccordionHeader>
+                  <AccordionTrigger>
+                    {({ isExpanded }: { isExpanded: boolean }) => (
+                      <>
+                        <Text fontWeight="$bold" color="$slate800">PLANTA {planta.piso}</Text>
+                        <AccordionIcon as={isExpanded ? ChevronUpIcon : ChevronDownIcon} ml="$3" />
+                      </>
+                    )}
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionContent pb="$4">
+                  <VStack space="md">
+                    {planta.habitaciones.map((hab) => {
+                      const resHabs = bookings.filter(b => b.roomNumber === hab.numero);
 
-              <Divider my="$3" />
-
-              <HStack space="md" alignItems="center">
-                {/* Usamos el icono que sí tienes en la librería */}
-                <Icon as={CalendarDaysIcon} color="$slate400" size="sm" />
-                <VStack>
-                  <Text size="xs" color="$slate500">Estancia</Text>
-                  <Text size="sm" fontWeight="$medium" color="$slate700">
-                    {reserva.checkIn.toLocaleDateString()} — {reserva.checkOut.toLocaleDateString()}
-                  </Text>
-                </VStack>
-              </HStack>
-            </Box>
-          ))}
-        </VStack>
+                      return (
+                        <Box key={hab.numero} p="$3" bg="$slate50" borderRadius="$md" borderWidth={1} borderColor="$slate200">
+                          <Heading size="xs" mb="$2" color="$blue700">Habitación {hab.numero}</Heading>
+                          {resHabs.length === 0 ? (
+                            <Text size="xs" italic color="$slate400">Sin reservas registradas</Text>
+                          ) : (
+                            resHabs.map((res, index) => (
+                              <VStack key={res.id}>
+                                <HStack justifyContent="space-between" py="$1">
+                                  <VStack>
+                                    <Text size="sm" fontWeight="$bold" color="$slate800">{res.guestName}</Text>
+                                    <Text size="xs" color="$slate500">
+                                      {new Date(res.checkIn).toLocaleDateString()} - {new Date(res.checkOut).toLocaleDateString()}
+                                    </Text>
+                                  </VStack>
+                                  <Badge action={res.status === 'checked-in' ? 'success' : 'info'} variant="outline" borderRadius="$full">
+                                    <BadgeText size="xs">{res.status}</BadgeText>
+                                  </Badge>
+                                </HStack>
+                                {index < resHabs.length - 1 && <Divider my="$1" />}
+                              </VStack>
+                            ))
+                          )}
+                        </Box>
+                      );
+                    })}
+                  </VStack>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </Box>
       </ScrollView>
     </Box>
   );
