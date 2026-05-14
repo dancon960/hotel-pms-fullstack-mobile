@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { 
   Box, 
   VStack, 
@@ -56,6 +57,8 @@ export default function IncidenciasScreen() {
     }
 
     addIncident(newIncident);
+// Vibración de éxito
+Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowModal(false);
     setRoomNum('');
     setDescription('');

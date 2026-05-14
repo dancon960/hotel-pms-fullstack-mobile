@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware'; // Importamos persistencia
+import AsyncStorage from '@react-native-async-storage/async-storage'; // El "disco duro" del móvil
 import { Planta, Habitacion, Booking, Incident } from '../types';
 
 const PRECIOS: Record<string, number> = { 'DBL': 85, 'SUI': 150, 'IND': 60 };
@@ -32,46 +34,50 @@ interface HotelStore {
   setSelectedRoom: (room: Habitacion | null) => void;
   cambiarEstado: (numero: string, nuevoEstado: Habitacion['estado']) => void;
   addIncident: (incident: Incident) => void;
-  addBooking: (booking: Booking) => boolean; // Devuelve true si se pudo añadir (disponibilidad)
+  addBooking: (booking: Booking) => boolean;
   updateBooking: (id: string, updated: Partial<Booking>) => void;
 }
 
-export const useHotelStore = create<HotelStore>((set, get) => ({
-  plantas: HOTEL_DATA,
-  selectedRoom: null,
-  incidents: [],
-  bookings: [
-    { id: '1', guestName: 'García, Daniel', roomNumber: '102', checkIn: new Date(2026, 4, 8), checkOut: new Date(2026, 4, 12), status: 'checked-in', createdAt: new Date(), updatedAt: new Date() },
-    { id: '2', guestName: 'Martínez, Ana', roomNumber: '102', checkIn: new Date(2026, 4, 15), checkOut: new Date(2026, 4, 20), status: 'confirmed', createdAt: new Date(), updatedAt: new Date() },
-  ],
+export const useHotelStore = create<HotelStore>()(
+  persist(
+    (set, get) => ({
+      plantas: HOTEL_DATA,
+      selectedRoom: null,
+      incidents: [],
+      bookings: [
+        { id: '1', guestName: 'García, Daniel', roomNumber: '102', checkIn: new Date(2026, 4, 8), checkOut: new Date(2026, 4, 12), status: 'checked-in', createdAt: new Date(), updatedAt: new Date() },
+      ],
 
-  setSelectedRoom: (room) => set({ selectedRoom: room }),
+      setSelectedRoom: (room) => set({ selectedRoom: room }),
 
-  addBooking: (newBooking) => {
-    const { bookings } = get();
-    // Lógica de Disponibilidad: Verificar que no choque con otras fechas en la misma habitación
-    const choque = bookings.some(b => 
-      b.roomNumber === newBooking.roomNumber &&
-      ((newBooking.checkIn >= b.checkIn && newBooking.checkIn < b.checkOut) ||
-       (newBooking.checkOut > b.checkIn && newBooking.checkOut <= b.checkOut))
-    );
+      cambiarEstado: (numero, nuevoEstado) => set((state) => ({
+        plantas: state.plantas.map(p => ({
+          ...p,
+          habitaciones: p.habitaciones.map(h => h.numero === numero ? { ...h, estado: nuevoEstado } : h)
+        }))
+      })),
 
-    if (choque) return false;
+      addIncident: (incident) => set((state) => ({ incidents: [...state.incidents, incident] })),
 
-    set((state) => ({ bookings: [...state.bookings, newBooking] }));
-    return true;
-  },
+      addBooking: (newBooking) => {
+        const { bookings } = get();
+        const choque = bookings.some(b => 
+          b.roomNumber === newBooking.roomNumber &&
+          ((newBooking.checkIn >= b.checkIn && newBooking.checkIn < b.checkOut) ||
+           (newBooking.checkOut > b.checkIn && newBooking.checkOut <= b.checkOut))
+        );
+        if (choque) return false;
+        set((state) => ({ bookings: [...state.bookings, newBooking] }));
+        return true;
+      },
 
-  updateBooking: (id, updated) => set((state) => ({
-    bookings: state.bookings.map(b => b.id === id ? { ...b, ...updated, updatedAt: new Date() } : b)
-  })),
-
-  cambiarEstado: (numero, nuevoEstado) => set((state) => ({
-    plantas: state.plantas.map(p => ({
-      ...p,
-      habitaciones: p.habitaciones.map(h => h.numero === numero ? { ...h, estado: nuevoEstado } : h)
-    }))
-  })),
-  
-  addIncident: (incident) => set((state) => ({ incidents: [...state.incidents, incident] })),
-}));
+      updateBooking: (id, updated) => set((state) => ({
+        bookings: state.bookings.map(b => b.id === id ? { ...b, ...updated } : b)
+      })),
+    }),
+    {
+      name: 'hotel-pms-storage', // Nombre de la "base de datos" local
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+);
