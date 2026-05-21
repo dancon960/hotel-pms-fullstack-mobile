@@ -8,8 +8,6 @@ import {
   Heading, 
   Button, 
   ButtonText, 
-  Input, 
-  InputField, 
   FormControl, 
   FormControlLabel, 
   FormControlLabelText,
@@ -23,13 +21,16 @@ import {
   ModalFooter,
   HStack,
   Textarea,
-  TextareaInput
+  TextareaInput,
+  Input,
+  InputField
 } from '@gluestack-ui/themed';
 import { useHotelStore } from '../../store/hotelStore';
 import { incidentSchema, Incident } from '../../types';
 
 export default function IncidenciasScreen() {
-  const { incidents, addIncident } = useHotelStore();
+  // Traemos también resolveIncident del store
+  const { incidents, addIncident, resolveIncident } = useHotelStore();
   const [showModal, setShowModal] = useState(false);
   
   const [roomNum, setRoomNum] = useState('');
@@ -37,16 +38,15 @@ export default function IncidenciasScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = () => {
-    // Forzamos el objeto para que cumpla estrictamente con la interfaz Incident
     const newIncident: Incident = {
       id: Math.random().toString(36).substring(7),
       createdAt: new Date(),
       updatedAt: new Date(),
       roomNumber: roomNum,
       description: description,
-      status: 'open' as 'open', // Aseguramos el literal exacto
-      priority: 'medium' as 'medium', // Aseguramos el literal exacto
-      title: `Incidencia Hab. ${roomNum}`, // Así queda especificada la incidencia en la lista
+      status: 'open', 
+      priority: 'medium', 
+      title: `Incidencia Hab. ${roomNum}`, 
     };
 
     const result = incidentSchema.safeParse(newIncident);
@@ -57,12 +57,17 @@ export default function IncidenciasScreen() {
     }
 
     addIncident(newIncident);
-// Vibración de éxito
-Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setShowModal(false);
     setRoomNum('');
     setDescription('');
     setError(null);
+  };
+
+  // Función para cuando pulsamos el botón de finalizar
+  const handleResolve = (id: string) => {
+    resolveIncident(id);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   return (
@@ -82,7 +87,6 @@ Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               <Text color="$slate400">No hay incidencias registradas</Text>
             </Box>
           ) : (
-            // Forzamos el tipo Incident aquí para que reconozca .status
             incidents.map((item: Incident) => (
               <Box 
                 key={item.id} 
@@ -91,37 +95,52 @@ Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 borderRadius="$lg" 
                 softShadow="1"
                 borderLeftWidth={4}
-                borderLeftColor={item.status === ('pending' as string) ? '$orange400' : '$green400'}
+                // Si está abierta se ve roja, si está finalizada (closed) se ve verde
+                borderLeftColor={item.status === 'open' ? '$red500' : '$green500'}
               >
                 <HStack justifyContent="space-between" alignItems="center">
                   <Heading size="sm" color="$slate800">Habitación {item.roomNumber}</Heading>
                   <Box 
                     px="$2" 
                     py="$0.5" 
-                    bg={item.status === ('pending' as string) ? '$orange50' : '$green50'} 
+                    bg={item.status === 'open' ? '$red50' : '$green50'} 
                     borderRadius="$sm"
                   >
                     <Text 
                       size="xs" 
-                      color={item.status === ('pending' as string) ? '$orange600' : '$green600'} 
+                      color={item.status === 'open' ? '$red600' : '$green600'} 
                       fontWeight="$bold" 
                       textTransform="uppercase"
                     >
-                      {item.status}
+                      {item.status === 'open' ? 'Abierta' : 'Finalizada'}
                     </Text>
                   </Box>
                 </HStack>
                 <Text size="sm" mt="$2" color="$slate600">{item.description}</Text>
-                <Text size="xs" mt="$3" color="$slate400" textAlign="right">
-                  {item.createdAt.toLocaleDateString()}
-                </Text>
+                
+                <HStack justifyContent="space-between" alignItems="center" mt="$3">
+                  <Text size="xs" color="$slate400">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </Text>
+                  
+                  {/* Si la incidencia está abierta ('open'), pintamos el botón para darla por terminada */}
+                  {item.status === 'open' && (
+                    <Button 
+                      size="xs" 
+                      bg="$green600" 
+                      onPress={() => handleResolve(item.id)}
+                      borderRadius="$md"
+                    >
+                      <ButtonText size="xs">Finalizar</ButtonText>
+                    </Button>
+                  )}
+                </HStack>
               </Box>
             ))
           )}
         </VStack>
       </ScrollView>
 
-      {/* Modal corregido sin props problemáticas */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <ModalBackdrop />
         <ModalContent>

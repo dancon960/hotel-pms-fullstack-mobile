@@ -34,6 +34,7 @@ interface HotelStore {
   setSelectedRoom: (room: Habitacion | null) => void;
   cambiarEstado: (numero: string, nuevoEstado: Habitacion['estado']) => void;
   addIncident: (incident: Incident) => void;
+  resolveIncident: (id: string) => void;
   addBooking: (booking: Booking) => boolean;
   updateBooking: (id: string, updated: Partial<Booking>) => void;
 }
@@ -58,6 +59,12 @@ export const useHotelStore = create<HotelStore>()(
       })),
 
       addIncident: (incident) => set((state) => ({ incidents: [...state.incidents, incident] })),
+
+      resolveIncident: (id) => set((state) => ({
+        incidents: state.incidents.map(inc => 
+          inc.id === id ? { ...inc, status: 'closed' as any } : inc
+        )
+      })),
 
       addBooking: (newBooking) => {
         const { bookings } = get();
